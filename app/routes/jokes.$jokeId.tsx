@@ -1,16 +1,10 @@
 import type { ActionArgs, LoaderArgs, V2_MetaFunction } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
-import {
-  isRouteErrorResponse,
-  Link,
-  useLoaderData,
-  useParams,
-  useRouteError,
-} from '@remix-run/react';
-import { JokeDisplay } from '~/components/joke';
+import { isRouteErrorResponse, useLoaderData, useParams, useRouteError } from '@remix-run/react';
 
+import { JokeDisplay } from '~/components/joke';
 import { db } from '~/utils/db.server';
-import { requireUserId, getUserId } from '~/utils/session.server';
+import { getUserId, requireUserId } from '~/utils/session.server';
 
 export const meta: V2_MetaFunction<typeof loader> = ({ data }) => {
   const { description, title } = data
@@ -29,7 +23,6 @@ export const meta: V2_MetaFunction<typeof loader> = ({ data }) => {
 
 export const loader = async ({ params, request }: LoaderArgs) => {
   const userId = await getUserId(request);
-
   const joke = await db.joke.findUnique({
     where: { id: params.jokeId },
   });
@@ -38,7 +31,10 @@ export const loader = async ({ params, request }: LoaderArgs) => {
       status: 404,
     });
   }
-  return json({ isOwner: userId === joke.jokesterId, joke });
+  return json({
+    isOwner: userId === joke.jokesterId,
+    joke,
+  });
 };
 
 export const action = async ({ params, request }: ActionArgs) => {
@@ -73,12 +69,15 @@ export function ErrorBoundary() {
   const error = useRouteError();
   console.error(error);
 
-  if (isRouteErrorResponse(error) && error.status === 404) {
+  if (isRouteErrorResponse(error)) {
     if (error.status === 400) {
       return <div className="error-container">What you're trying to do is not allowed.</div>;
     }
     if (error.status === 403) {
       return <div className="error-container">Sorry, but "{jokeId}" is not your joke.</div>;
+    }
+    if (error.status === 404) {
+      return <div className="error-container">Huh? What the heck is "{jokeId}"?</div>;
     }
   }
 

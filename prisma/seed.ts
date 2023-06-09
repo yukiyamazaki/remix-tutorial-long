@@ -24,7 +24,7 @@ function getJokes() {
 
   return [
     {
-      name: 'Road worker',
+      name: '山田太郎',
       content: `I never wanted to believe that my Dad was stealing from his job as a road worker. But when I got home, all the signs were there.`,
     },
     {
