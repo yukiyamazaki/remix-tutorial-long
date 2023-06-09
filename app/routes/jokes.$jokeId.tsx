@@ -1,4 +1,4 @@
-import type { ActionArgs, LoaderArgs } from '@remix-run/node';
+import type { ActionArgs, LoaderArgs, V2_MetaFunction } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
 import {
   isRouteErrorResponse,
@@ -7,9 +7,25 @@ import {
   useParams,
   useRouteError,
 } from '@remix-run/react';
+import { JokeDisplay } from '~/components/joke';
 
 import { db } from '~/utils/db.server';
 import { requireUserId, getUserId } from '~/utils/session.server';
+
+export const meta: V2_MetaFunction<typeof loader> = ({ data }) => {
+  const { description, title } = data
+    ? {
+        description: `Enjoy the "${data.joke.name}" joke and much more`,
+        title: `"${data.joke.name}" joke`,
+      }
+    : { description: 'No joke found', title: 'No joke' };
+
+  return [
+    { name: 'description', content: description },
+    { name: 'twitter:description', content: description },
+    { title },
+  ];
+};
 
 export const loader = async ({ params, request }: LoaderArgs) => {
   const userId = await getUserId(request);
@@ -49,25 +65,13 @@ export const action = async ({ params, request }: ActionArgs) => {
 export default function JokeRoute() {
   const data = useLoaderData<typeof loader>();
 
-  return (
-    <div>
-      <p>Here's your hilarious joke:</p>
-      <p>{data.joke.content}</p>
-      <Link to=".">"{data.joke.name}" Permalink</Link>
-      {data.isOwner ? (
-        <form method="post">
-          <button className="button" name="intent" type="submit" value="delete">
-            Delete
-          </button>
-        </form>
-      ) : null}
-    </div>
-  );
+  return <JokeDisplay isOwner={data.isOwner} joke={data.joke} />;
 }
 
 export function ErrorBoundary() {
   const { jokeId } = useParams();
   const error = useRouteError();
+  console.error(error);
 
   if (isRouteErrorResponse(error) && error.status === 404) {
     if (error.status === 400) {

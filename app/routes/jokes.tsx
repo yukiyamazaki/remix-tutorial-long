@@ -54,7 +54,9 @@ export default function JokesRoute() {
             <ul>
               {data.jokeListItems.map(({ id, name }) => (
                 <li key={id}>
-                  <Link to={id}>{name}</Link>
+                  <Link prefetch="intent" to={id}>
+                    {name}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -67,6 +69,13 @@ export default function JokesRoute() {
           </div>
         </div>
       </main>
+      <footer className="jokes-footer">
+        <div className="container">
+          <Link reloadDocument to="/jokes.rss">
+            RSS
+          </Link>
+        </div>
+      </footer>
     </div>
   );
 }
